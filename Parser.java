@@ -89,16 +89,16 @@ public class Parser {
 
       if(token.isKind("num")) {
          Node number = new Node(token);
-         return new Node("number", number, null, null);
+         return number;
       }
       else if(token.isKind("word")) {
          Node name = new Node(token);
-         return new Node("name", name, null, null);
+         return name;
       }
       else {
          lex.putBackToken(token);
          Node lst = parseList();
-         return new Node("expr", lst, null, null);
+         return lst;
       }
    }
 
@@ -123,6 +123,7 @@ public class Parser {
          lex.putBackToken(token);
          return new Node("expr", expr, null, null);
       }
+      lex.putBackToken(token);
       Node items = parseItems();
       return new Node("items", expr, items, null);
    }

@@ -1,0 +1,3 @@
+(define (inc x)
+    (plus x 1)
+)
