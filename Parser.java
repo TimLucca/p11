@@ -119,7 +119,7 @@ public class Parser {
    public Node parseItems() {
       Node expr = parseExpr();
       Token token = lex.getNextToken();
-      if(!token.isKind("rparen")) {
+      if(token.isKind("rparen")) {
          lex.putBackToken(token);
          return new Node("expr", expr, null, null);
       }
