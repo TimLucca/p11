@@ -128,7 +128,7 @@ public class Lexer {
             }
 
             else if ( state == 7 ) {
-               if ( letter(sym) ) {
+               if ( letter(sym) || digit(sym) ) {
                   data += (char) sym;
                   state = 7;
                }

@@ -18,13 +18,13 @@ public class Parser {
 
    public Node parseProgram() {
       System.out.println("-----> parsing <program>:");
-      Node classes = parseDefs();
+      Node defs = parseDefs();
       return new Node("program", defs, null, null);
    }
 
 
    public Node parseDefs() {
-      Node def = paseDef();
+      Node def = parseDef();
       Token token = lex.getNextToken();
       if ( token.isKind("eof")) {
          return new Node("defs", def, null, null);
@@ -39,20 +39,21 @@ public class Parser {
       errorCheck(token, "lparen");
       
       token = lex.getNextToken();
-      errorCheck(token, "word", "DEFINE");
+      errorCheckNoCase(token, "word", "define");
 
       token = lex.getNextToken();
       errorCheck(token, "lparen");
 
       Token name = lex.getNextToken();
-      errorCheck(token, "word");
+      errorCheck(name, "word");
+
+      Node params = null;
 
       token = lex.getNextToken();
       if(!token.isKind("rparen")){
-         Node params = parseParams();
-      }
-      else{
-         Node params = null;
+         lex.putBackToken(token);
+         params = parseParams();
+         token = lex.getNextToken();
       }
       errorCheck(token, "rparen");
 
@@ -61,29 +62,38 @@ public class Parser {
       token = lex.getNextToken();
       errorCheck(token, "rparen");
 
-      return new Node("def", name.getDetails(), params, expr);
+      Node nameNode = new Node(name);
+
+      return new Node("def", nameNode, params, expr);
    }
 
    public Node parseParams() {
       Token name = lex.getNextToken();
-      errorCheck(token, "word");
+      errorCheck(name, "word");
+
+      Node nameNode = new Node(name);
       
       Token token = lex.getNextToken();
       if(token.isKind("word")) {
          lex.putBackToken(token);
          Node params = parseParams();
-         return new Node("params", name.getDetails(), params, null);
+         return new Node("params", nameNode, params, null);
       }
 
       lex.putBackToken(token);
-      return new Node("params", name.getDetails(), null, null);
+      return new Node("params", nameNode, null, null);
    }
 
    public Node parseExpr() {
       Token token = lex.getNextToken();
 
       if(token.isKind("num")) {
-         return new Node("number", token.getDetails(), null, null);
+         Node number = new Node(token);
+         return new Node("number", number, null, null);
+      }
+      else if(token.isKind("word")) {
+         Node name = new Node(token);
+         return new Node("name", name, null, null);
       }
       else {
          lex.putBackToken(token);
@@ -109,7 +119,7 @@ public class Parser {
    public Node parseItems() {
       Node expr = parseExpr();
       Token token = lex.getNextToken();
-      if(token.isKind("rparen")) {
+      if(!token.isKind("rparen")) {
          lex.putBackToken(token);
          return new Node("expr", expr, null, null);
       }
@@ -136,5 +146,15 @@ public class Parser {
       System.exit(1);
     }
   }
+
+  private void errorCheckNoCase( Token token, String kind, String details ) {
+   if( ! token.isKind( kind ) || 
+       ! token.getDetails().equalsIgnoreCase( details ) ) {
+     System.out.println("Error:  expected " + token + 
+                         " to be kind= " + kind + 
+                         " and details= " + details );
+     System.exit(1);
+   }
+ }
 
 }
