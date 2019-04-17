@@ -152,7 +152,7 @@ System.out.println("has " + number + " children");
   // (for nodes that don't return a value)
    public void execute() {
 
-//      System.out.println("Executing node " + id + " of kind " + kind );
+       //      System.out.println("Executing node " + id + " of kind " + kind );
 
       if ( kind.equals("program") ) {
          root = this;  // note the root node of entire tree
@@ -243,9 +243,10 @@ System.out.println("has " + number + " children");
    }// execute
     
    // compute and return value produced by this node
+   //MRB Hey, Tim.  Should we change this to return Node or Value object per discussion w/ Shultz?
    public double evaluate() {
 
-//      System.out.println("Evaluating node " + id + " of kind " + kind );
+       //      System.out.println("Evaluating node " + id + " of kind " + kind );
 
       if ( kind.equals("var") ) {
          return table.retrieve( info );
@@ -254,30 +255,7 @@ System.out.println("has " + number + " children");
       else if ( kind.equals("num") ) {
          return Double.parseDouble( info );
       }
-
-      else if ( kind.equals("+") || kind.equals("-") ) {
-         double value1 = first.evaluate();
-         double value2 = second.evaluate();
-         if ( kind.equals("+") )
-            return value1 + value2;
-         else
-            return value1 - value2;
-      }
-
-      else if ( kind.equals("*") || kind.equals("/") ) {
-         double value1 = first.evaluate();
-         double value2 = second.evaluate();
-         if ( kind.equals("*") )
-            return value1 * value2;
-         else
-            return value1 / value2;
-       }
- 
-       else if ( kind.equals("opp") ) {
-          double value = first.evaluate();
-          return -value;
-       }
-
+      
        else if ( kind.equals("funcCall") ) {
           // execute a function call to produce a value
 
@@ -287,42 +265,44 @@ System.out.println("has " + number + " children");
                         // to return once at the bottom
 
          // handle bifs
-
+         // MRB 04/16/2019 Edited bif0 - bif3 to add reserve words.
          if ( member( funcName, bif0 ) ) {
-            if ( funcName.equals("input") )
-               value =  keys.nextDouble();
+            if      ( funcName.equals("read") ) ;
+            else if ( funcName.equals("write") ) ;
+            else if ( funcName.equals("nl") ) ;
+            else if ( funcName.equals("quote") ) ;
+            else if ( funcName.equals("quit") ) ;
             else {
                error("unknown bif0 name [" + funcName + "]");
                value = -1;
             }
          }
+         
          else if ( member( funcName, bif1 ) ) {
             double arg1 = first.first.evaluate();
 
-            if ( funcName.equals("sqrt") )
-               value = Math.sqrt( arg1 );
-            else if ( funcName.equals("cos") )
-               value = Math.cos( Math.toRadians( arg1 ) );
-            else if ( funcName.equals("sin") )
-               value = Math.sin( Math.toRadians( arg1 ) );
-            else if ( funcName.equals("atan") )
-               value = Math.toDegrees( Math.atan( arg1 ) );
-            else if ( funcName.equals("round") )
-               value = Math.round( arg1 );
-            else if ( funcName.equals("trunc") )
-               value = (int) arg1;
-            else if ( funcName.equals("not") )
-               value = arg1 == 0 ? 1 : 0;
+            if      ( funcName.equals("ins") ) ;
+            else if ( funcName.equals("first") ) ;
+            else if ( funcName.equals("rest") ) ;
             else {
                error("unknown bif1 name [" + funcName + "]");
                value = -1;
             }
          }
+         
          else if ( member( funcName, bif2 ) ) {
             double arg1 = first.first.evaluate();
             double arg2 = first.second.first.evaluate();
 
-            if ( funcName.equals("lt") ) 
+            if      ( funcName.equals("plus") ) 
+                value = arg1 + arg2;
+            else if ( funcName.equals("minus") ) 
+                value = arg1 - arg2;
+            else if ( funcName.equals("times") ) 
+                value = arg1 * arg2;
+            else if ( funcName.equals("div") ) 
+                value = arg1 / arg2;
+            else if ( funcName.equals("lt") ) 
                value = arg1 < arg2 ? 1 : 0;
             else if ( funcName.equals("le") ) 
                value = arg1 <= arg2 ? 1 : 0;
@@ -330,18 +310,30 @@ System.out.println("has " + number + " children");
                value = arg1 == arg2 ? 1 : 0;
             else if ( funcName.equals("ne") ) 
                value = arg1 != arg2 ? 1 : 0;
-            else if ( funcName.equals("pow") ) 
-               value = Math.pow( arg1 , arg2 );
             else if ( funcName.equals("and") ) 
                value = arg1!=0 && arg2!=0 ? 1 : 0;
             else if ( funcName.equals("or") ) 
                value = arg1!=0 || arg2!=0 ? 1 : 0;
+            else if ( funcName.equals("not") )
+               value = arg1 == 0 ? 1 : 0;
             else {
                error("unknown bif2 name [" + funcName + "]");
                value = -1;
             }
          }
-
+         
+         else if ( member( funcName, bif3 ) ) {
+            double arg1 = first.first.evaluate();
+            //
+            if      ( funcName.equals("null") ) ;
+            else if ( funcName.equals("num") ) ;
+            else if ( funcName.equals("list") ) ;
+            else {
+               error("unknown bif3 name [" + funcName + "]");
+               value = -1;
+            }
+         }
+         
          else {// user-defined function
 
             Node body = passArgs( this, funcName );
@@ -364,13 +356,13 @@ System.out.println("has " + number + " children");
        }
 
    }// evaluate
-
-   private final static String[] bif0 = { "input", "nl" };
-   private final static String[] bif1 = { "sqrt", "cos", "sin", "atan", 
-                             "round", "trunc", "not" };
-   private final static String[] bif2 = { "lt", "le", "eq", "ne", "pow",
-                                          "or", "and"
-                                        };
+   
+   //MRB 04/16/2019 Added bif3, changed bif0-bif2
+   private final static String[] bif0 = { "read", "write", "nl", "quote", "quit" };
+   private final static String[] bif1 = { "ins", "first", "rest" };
+   private final static String[] bif2 = { "plus", "minus", "times", "div", "lt", "le", "eq", "ne",
+                                          "and", "or", "not" };
+   private final static String[] bif3 = { "null", "num", "list" };
 
    // return whether target is a member of array
    private static boolean member( String target, String[] array ) {
@@ -430,8 +422,8 @@ System.out.println("has " + number + " children");
             error("there are more arguments than parameters");
          }
 
-//         System.out.println("at start of call to " + funcName +
-//                           " memory table is:\n" + newTable );
+         //         System.out.println("at start of call to " + funcName +
+         //                           " memory table is:\n" + newTable );
 
          // manage the memtable stack
          memStack.add( newTable );
